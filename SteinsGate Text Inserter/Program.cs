@@ -33,7 +33,7 @@ namespace Steins_Gate_Text_Inserter
                 @"
                       
                       ###################################
-                      #     NSB Dialogues Extractor     #
+                      #      NSB Dialogues Inserter     #
                       ###################################
                       #         Made by Daviex          #
                       ###################################
@@ -65,7 +65,7 @@ namespace Steins_Gate_Text_Inserter
 
             BinaryReader nsbFile = new BinaryReader(File.OpenRead("nss\\" + originalFile));
 
-            Console.WriteLine("After analyzed your NSB Files, i will start!");
+            Console.WriteLine("After analyzed your NSB Files, I will start!");
 
             string mapName = originalFile.Substring(0, originalFile.Length - 3) + "map";
             BinaryReader mapFile = new BinaryReader(File.OpenRead("nss\\" + mapName));
