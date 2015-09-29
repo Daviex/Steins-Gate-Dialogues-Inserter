@@ -1,6 +1,6 @@
-# Steins;Gate Dialogues Extractor
+# Steins;Gate Dialogues Inserter
 ___________________________________
-|     NSB Dialogues Extractor     |
+|      NSB Dialogues Inserter     |
 |---------------------------------|
 |     New Tool Made by Daviex     |
 |---------------------------------|
@@ -20,16 +20,20 @@ This tool was made for the Italian Steins;Gate Project!
 If you use it, just mention where you took it from!
 
 # How it works?
-The tool is based of the idea that for our project we need only dialogues.
-Well, after I've analyzed the NSB files, I found out that texts of the game
-are saved inside the tags <PRE></PRE>, so everything is inside those tags are dialogues,
-and also set person who is talking, the animation etc.
-
-So, I'm going through every single file, and check out for those tags,
-and, when I found them, I save them and after I'm going to write them down to a file txt.
+With the other tool, you now have all the txt files from your game.
+This tool is thinked to work only with 1 file at time, so, to use it,
+you have to drag&drop the text file over the executable of this program.
+To make this tool work, be sure that you have in the same folder as the .exe
+the folder nss, with all the NSB and MAP files. Also, the file text need to
+mantain the same name, don't change from original file.
+After you dropped the text file into over the executable, the tool will start
+analyzing the file, and importing it. When it finish, you will find a new folder
+called importedText, with inside the NSB and MAP file updated.
 
 # How to make it works?
-Move the nss folder you decompiled with the archive tool in the same folder as the executable and execute it, will create a folder called extracted.
+Move the nss folder you decompiled with the archive tool in the same folder as the executable,
+pick the text file to import, and drag&drop over the executable, it will start and will create a folder called importedText
+with your file.
 
 Enjoy
 
