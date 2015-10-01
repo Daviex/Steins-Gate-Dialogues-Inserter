@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Steins Gate Text Inserter", "SteinsGate Text Inserter\Steins Gate Text Inserter.csproj", "{F4C702C2-5C56-43F5-8F8B-CFAD3B16BE5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteinsGate Dialogues Inserter", "SteinsGate Dialogues Inserter\SteinsGate Dialogues Inserter.csproj", "{F4C702C2-5C56-43F5-8F8B-CFAD3B16BE5F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

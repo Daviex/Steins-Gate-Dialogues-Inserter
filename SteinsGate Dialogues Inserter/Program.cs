@@ -70,7 +70,10 @@ namespace Steins_Gate_Text_Inserter
             string mapName = originalFile.Substring(0, originalFile.Length - 3) + "map";
             BinaryReader mapFile = new BinaryReader(File.OpenRead("nss\\" + mapName));
 
-            Analyzer(nsbFile, mapFile);
+            if(!originalFile.Contains("tips"))
+                Analyzer(nsbFile, mapFile);
+            else
+                Analyzer(nsbFile, mapFile, true);
 
             Console.WriteLine();
             Console.WriteLine("Let's bring back Mayuri!");
@@ -136,7 +139,7 @@ namespace Steins_Gate_Text_Inserter
             }
         }
 
-        static void Analyzer(BinaryReader nsbFile, BinaryReader mapFile)
+        static void Analyzer(BinaryReader nsbFile, BinaryReader mapFile, bool isExtraTips = false)
         {
             uint Entry, Length;
             ushort numParam = 0;
@@ -162,9 +165,17 @@ namespace Steins_Gate_Text_Inserter
                     Text = Encoding.Unicode.GetString(buffer);
                     if (Text.Contains("<PRE"))
                     {
-                        index.Add((int)Entry + 1);
-                        lengths.Add((int)Length);
-                        positions.Add((int)nsbFile.BaseStream.Position);
+                        if (isExtraTips)
+                        {
+                            if (Text.Length <= 15)
+                            { }
+                            else
+                            {
+                                index.Add((int)Entry + 1);
+                                lengths.Add((int)Length);
+                                positions.Add((int)nsbFile.BaseStream.Position);
+                            }
+                        }
                     }
 
                     currLine.param[i] = Text;
@@ -197,30 +208,26 @@ namespace Steins_Gate_Text_Inserter
             oldFile.BaseStream.Position = 0;
 
             uint Entry, Length;
-            ushort numParam = 0;
+            ushort numParam = 0, magic;
             int point = 0, currentPos = 0, newLength = 0;
             string Text = String.Empty;
 
             while (point < oldFile.BaseStream.Length)
             {
                 Entry = oldFile.ReadUInt32();
+                newFile.Write(Entry);
 
-                oldFile.BaseStream.Position -= 4;
-                newFile.Write(oldFile.ReadUInt32());
-
-                newFile.Write(oldFile.ReadUInt16());
+                magic = oldFile.ReadUInt16();
+                newFile.Write(magic);
 
                 numParam = oldFile.ReadUInt16();
-                oldFile.BaseStream.Position -= 2;
-                newFile.Write(oldFile.ReadUInt16());
+                newFile.Write(numParam);
 
                 for (int i = 0; i < numParam; i++)
                 {
                     if (myText.ContainsKey((int)Entry) && i == 2)
                     {
                         Length = oldFile.ReadUInt32();
-                        oldFile.BaseStream.Position -= 4;
-                        oldFile.ReadUInt32();
                         oldFile.ReadBytes((int)Length);
 
                         newFile.Write(myText[(int)Entry].Length * 2);
@@ -229,9 +236,8 @@ namespace Steins_Gate_Text_Inserter
                     else
                     {
                         Length = oldFile.ReadUInt32();
-                        oldFile.BaseStream.Position -= 4;
+                        newFile.Write(Length);
 
-                        newFile.Write(oldFile.ReadUInt32());
                         newFile.Write(oldFile.ReadBytes((int)Length));
                     }
                 }
@@ -240,7 +246,6 @@ namespace Steins_Gate_Text_Inserter
             }
 
             int newOffset = 0, newLengthPlus = 0, newLengthMinus = 0;
-            //bool IsLess = false;
 
             foreach (uint offset in offsets)
             {
@@ -250,11 +255,11 @@ namespace Steins_Gate_Text_Inserter
                     {
                         if (lengths[i] > newLengths[i])
                         {
-                            newLengthPlus += (int)(lengths[i] - newLengths[i]);
+                            newLengthPlus += lengths[i] - newLengths[i];
                         }
                         else if (lengths[i] < newLengths[i])
                         {
-                            newLengthMinus += (int)(newLengths[i] - lengths[i]);
+                            newLengthMinus += newLengths[i] - lengths[i];
                         }
                     }
                 }
@@ -264,36 +269,6 @@ namespace Steins_Gate_Text_Inserter
 
                 newLengthPlus = 0;
                 newLengthMinus = 0;
-
-                /*
-                    IsLess = false;
-                for (int j = 0; j < positions.Count && !IsLess; j++)
-                {
-                    if (offset > positions[j])
-                    {
-                        for (i = j; offset > positions[i]; i++)
-                        {
-                            if (lengths[i] != newLengths[i])
-                            {
-                                if (lengths[i] > newLengths[i])
-                                {
-                                    newLengthPlus += (int)(lengths[i] - newLengths[i]);
-                                }
-                                else if (lengths[i] < newLengths[i])
-                                {
-                                    newLengthMinus += (int)(newLengths[i] - lengths[i]);
-                                }
-                            }
-                            else { }
-                        }                        
-                    }
-                    else
-                    {
-                        IsLess = true;
-                        break;
-                    }
-
-                }*/
             }
 
             uint offSet;
