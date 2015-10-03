@@ -112,6 +112,8 @@ namespace Steins_Gate_Text_Inserter
                     if (lines.Contains("{textblock"))
                         //line += lines.Remove(0, lines.Substring(0, lines.IndexOf('}')).Length + 1) + '\n';
                         continue;
+                    else if (line.Contains("//"))
+                        continue;
                     else if (lines == "" && (!firstPass || firstString))
                     {
                         firstPass = true;
