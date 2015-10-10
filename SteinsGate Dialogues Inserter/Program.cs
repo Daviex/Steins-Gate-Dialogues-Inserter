@@ -27,6 +27,8 @@ namespace Steins_Gate_Text_Inserter
 
         static Dictionary<int, string> myText = new Dictionary<int, string>();
 
+        static int differenceOffsets = 0, chapterLength = 0, newChapterLength = 0;
+
         static void Main(string[] args)
         {
             Console.WriteLine(
@@ -48,7 +50,10 @@ namespace Steins_Gate_Text_Inserter
                       
                            Press any key to start...    
                                                          ");
-            Console.ReadLine();
+            Console.ReadKey();
+
+            Array.Resize(ref args, 1);
+            args[0] = "sg01_01.txt";
 
             if (args.Length == 0)
             {
@@ -58,7 +63,7 @@ namespace Steins_Gate_Text_Inserter
                 Environment.Exit(0);
             }
 
-            args[0] = args[0].Substring(args[0].LastIndexOf('\\') + 1);
+            //args[0] = args[0].Substring(args[0].LastIndexOf('\\') + 1);
 
             string originalFile = args[0].Replace("txt", "nsb");
             string textFile = args[0];
@@ -70,74 +75,51 @@ namespace Steins_Gate_Text_Inserter
             string mapName = originalFile.Substring(0, originalFile.Length - 3) + "map";
             BinaryReader mapFile = new BinaryReader(File.OpenRead("nss\\" + mapName));
 
-            if(!originalFile.Contains("tips"))
+            if (originalFile.Contains("sg") || originalFile.Contains("function"))
+            {
                 Analyzer(nsbFile, mapFile);
+
+                Console.WriteLine();
+                Console.WriteLine("Let's bring back Mayuri!");
+
+                ImportText(textFile);
+
+                if (!Directory.Exists("importedText\\nss"))
+                    Directory.CreateDirectory("importedText\\nss");
+
+                Console.WriteLine();
+                Console.WriteLine("I own time with my Reading Steiner!");
+
+                string newMapName = originalFile.Substring(0, originalFile.Length - 3) + "map";
+                BinaryWriter newMapFile = new BinaryWriter(File.Create("importedText\\nss\\" + newMapName));
+                BinaryWriter newNsbFile = new BinaryWriter(File.Create("importedText\\nss\\" + originalFile));
+
+                NewFile(nsbFile, mapFile, newNsbFile, newMapFile);
+
+                Console.WriteLine();
+                Console.Beep(3500, 500);
+                Console.WriteLine("Mayuri is back, and now we are on the world line of Steins;Gate!");
+                Console.WriteLine("Press any key to finish...");
+                Console.ReadKey();
+            }
             else
-                Analyzer(nsbFile, mapFile, true);
-
-            Console.WriteLine();
-            Console.WriteLine("Let's bring back Mayuri!");
-
-            ImportText(textFile);
-
-            if (!Directory.Exists("importedText\\nss"))
-                Directory.CreateDirectory("importedText\\nss");
-
-            Console.WriteLine();
-            Console.WriteLine("I own time with my Reading Steiner!");
-
-            string newMapName = originalFile.Substring(0, originalFile.Length - 3) + "map";
-            BinaryWriter newMapFile = new BinaryWriter(File.Create("importedText\\nss\\" + newMapName));
-            BinaryWriter newNsbFile = new BinaryWriter(File.Create("importedText\\nss\\" + originalFile));
-
-            NewFile(nsbFile, mapFile, newNsbFile, newMapFile);
-
-            Console.WriteLine();
-            Console.Beep(3500, 500);
-            Console.WriteLine("Mayuri is back, and now we are on the world line of Steins;Gate!");
-            Console.WriteLine("Press any key to finish...");
-            Console.ReadLine();
+            {
+                Console.WriteLine("I don't know how to work with this file... " +
+                                  "Please, try again.");
+                Console.WriteLine("Press any key to finish...");
+                Console.ReadKey();
+            }
         }
 
-        static void ImportText(string path)
+        static void calculateDifference(uint oldValue, uint newValue)
         {
-            int count = 0;
-            bool firstPass = false, firstString = false;
-            string line = String.Empty;
-
-            foreach(string lines in File.ReadAllLines(path))
+            if (oldValue > newValue)
             {
-                if(!lines.Contains(@"</PRE>"))
-                {
-                    if (lines.Contains("{textblock"))
-                        //line += lines.Remove(0, lines.Substring(0, lines.IndexOf('}')).Length + 1) + '\n';
-                        continue;
-                    else if (line.Contains("//"))
-                        continue;
-                    else if (lines == "" && (!firstPass || firstString))
-                    {
-                        firstPass = true;
-                        if (firstString)
-                        {
-                            line += lines + '\n';
-                            firstString = false;
-                        }
-                    }
-                    else
-                        line += lines + '\n';
-                    
-                    if (lines.Contains("text00010"))
-                        firstString = true;
-                }
-                else
-                {
-                    line += lines;
-                    myText.Add(index[count], line);
-                    newLengths.Add(line.Length * 2);
-                    line = String.Empty;
-                    firstPass = false;
-                    count++;
-                }
+                differenceOffsets -= (int)(oldValue - newValue);
+            }
+            else if (oldValue < newValue)
+            {
+                differenceOffsets += (int)(newValue - oldValue);
             }
         }
 
@@ -149,6 +131,7 @@ namespace Steins_Gate_Text_Inserter
             int point = 0;
             byte[] buffer;
             string Text = String.Empty;
+            bool hasChapter = false;
 
             while (point < nsbFile.BaseStream.Length)
             {
@@ -165,18 +148,21 @@ namespace Steins_Gate_Text_Inserter
                     Length = nsbFile.ReadUInt32();
                     buffer = nsbFile.ReadBytes((int)Length);
                     Text = Encoding.Unicode.GetString(buffer);
+                    if (Text == "$CHAPTER_NOW")
+                        hasChapter = true;
+                    else if (hasChapter && Text != "STRING")
+                    {
+                        index.Add((int)Entry + 1);
+                        chapterLength = (int)Length;
+                        hasChapter = false;
+                    }
                     if (Text.Contains("<PRE"))
                     {
-                        if (isExtraTips)
+                        if (Text.Length > 15)
                         {
-                            if (Text.Length <= 15)
-                            { }
-                            else
-                            {
-                                index.Add((int)Entry + 1);
-                                lengths.Add((int)Length);
-                                positions.Add((int)nsbFile.BaseStream.Position);
-                            }
+                            index.Add((int) Entry + 1);
+                            lengths.Add((int) Length);
+                            positions.Add((int) nsbFile.BaseStream.Position);
                         }
                     }
 
@@ -205,6 +191,56 @@ namespace Steins_Gate_Text_Inserter
             }
         }
 
+        static void ImportText(string path)
+        {
+            int count = 0;
+            bool firstPass = false, firstString = false;
+            string line = String.Empty;
+
+            foreach (string lines in File.ReadAllLines(path))
+            {
+                if (!lines.Contains(@"</PRE>"))
+                {
+                    if (lines.Contains("{textblock"))
+                        //line += lines.Remove(0, lines.Substring(0, lines.IndexOf('}')).Length + 1) + '\n';
+                        continue;
+                    else if (lines.Contains("<ChapterName"))
+                    {
+                        line += lines;
+
+                        myText.Add(index[count], line);
+                        line = String.Empty;
+                        count++;
+                    }
+                    else if (line.Contains("//"))
+                        continue;
+                    else if (lines == "" && (!firstPass || firstString))
+                    {
+                        firstPass = true;
+                        if (firstString)
+                        {
+                            line += lines + '\n';
+                            firstString = false;
+                        }
+                    }
+                    else
+                        line += lines + '\n';
+
+                    if (lines.Contains("text00010"))
+                        firstString = true;
+                }
+                else
+                {
+                    line += lines;
+                    myText.Add(index[count], line);
+                    newLengths.Add(line.Length * 2);
+                    line = String.Empty;
+                    firstPass = false;
+                    count++;
+                }
+            }
+        }
+
         static void NewFile(BinaryReader oldFile, BinaryReader mapFile, BinaryWriter newFile, BinaryWriter newMapFile)
         {
             oldFile.BaseStream.Position = 0;
@@ -213,6 +249,9 @@ namespace Steins_Gate_Text_Inserter
             ushort numParam = 0, magic;
             int point = 0, currentPos = 0, newLength = 0;
             string Text = String.Empty;
+            string result;
+            bool hasChapterName = false;
+            long chapterPosition = 0;
 
             while (point < oldFile.BaseStream.Length)
             {
@@ -227,19 +266,41 @@ namespace Steins_Gate_Text_Inserter
 
                 for (int i = 0; i < numParam; i++)
                 {
+                    Length = oldFile.ReadUInt32();
                     if (myText.ContainsKey((int)Entry) && i == 2)
                     {
-                        Length = oldFile.ReadUInt32();
                         oldFile.ReadBytes((int)Length);
 
                         newFile.Write(myText[(int)Entry].Length * 2);
                         newFile.Write(Encoding.Unicode.GetBytes(myText[(int)Entry]));
                     }
+                    else if (myText.ContainsKey((int)Entry) && myText.TryGetValue((int)Entry, out result) && result.Contains("<ChapterName>"))
+                    {
+                        string tempText = Encoding.Unicode.GetString(oldFile.ReadBytes((int)Length));
+
+                        if (tempText != "STRING")
+                        {
+                            string noOpenTag = result.Remove(0, "<ChapterName>".Length);
+                            string noEndTag = noOpenTag.Remove(noOpenTag.IndexOf("</ChapterName>"),
+                                "</ChapterName>".Length);
+
+                            hasChapterName = true;
+                            chapterPosition = newFile.BaseStream.Position;
+
+                            newChapterLength = noEndTag.Length*2;
+
+                            newFile.Write(noEndTag.Length*2);
+                            newFile.Write(Encoding.Unicode.GetBytes(noEndTag));
+                        }
+                        else
+                        {
+                            newFile.Write(tempText.Length * 2);
+                            newFile.Write(Encoding.Unicode.GetBytes(tempText));
+                        }
+                    }
                     else
                     {
-                        Length = oldFile.ReadUInt32();
                         newFile.Write(Length);
-
                         newFile.Write(oldFile.ReadBytes((int)Length));
                     }
                 }
@@ -248,6 +309,9 @@ namespace Steins_Gate_Text_Inserter
             }
 
             int newOffset = 0, newLengthPlus = 0, newLengthMinus = 0;
+
+            if (hasChapterName)
+                calculateDifference((uint) chapterLength, (uint) newChapterLength);
 
             foreach (uint offset in offsets)
             {
@@ -265,8 +329,13 @@ namespace Steins_Gate_Text_Inserter
                         }
                     }
                 }
-
+                
                 newOffset = (int)(offset - newLengthPlus + newLengthMinus);
+
+                if (hasChapterName)
+                    if (offset > chapterPosition)
+                        newOffset += differenceOffsets;
+
                 newOffsets.Add(newOffset);
 
                 newLengthPlus = 0;
