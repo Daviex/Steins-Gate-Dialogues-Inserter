@@ -51,7 +51,10 @@ namespace Steins_Gate_Text_Inserter
                            Press any key to start...    
                                                          ");
             Console.ReadKey();
-            
+
+            Array.Resize(ref args, 1);
+            args[0] = "sg00_01.txt";
+
             if (args.Length == 0)
             {
                 Console.WriteLine("You should move the file .txt on me to works!");
@@ -60,7 +63,7 @@ namespace Steins_Gate_Text_Inserter
                 Environment.Exit(0);
             }
 
-            args[0] = args[0].Substring(args[0].LastIndexOf('\\') + 1);
+            //args[0] = args[0].Substring(args[0].LastIndexOf('\\') + 1);
 
             string originalFile = args[0].Replace("txt", "nsb");
             string textFile = args[0];
@@ -312,7 +315,7 @@ namespace Steins_Gate_Text_Inserter
 
             foreach (uint offset in offsets)
             {
-                for (int i = 0; offset > positions[i] && i < positions.Count-1; i++)
+                for (int i = 0; i < positions.Count && offset > positions[i]; i++)
                 {
                     if (lengths[i] != newLengths[i])
                     {
