@@ -52,9 +52,6 @@ namespace Steins_Gate_Text_Inserter
                                                          ");
             Console.ReadKey();
 
-            Array.Resize(ref args, 1);
-            args[0] = "sg00_01.txt";
-
             if (args.Length == 0)
             {
                 Console.WriteLine("You should move the file .txt on me to works!");
@@ -63,7 +60,7 @@ namespace Steins_Gate_Text_Inserter
                 Environment.Exit(0);
             }
 
-            //args[0] = args[0].Substring(args[0].LastIndexOf('\\') + 1);
+            args[0] = args[0].Substring(args[0].LastIndexOf('\\') + 1);
 
             string originalFile = args[0].Replace("txt", "nsb");
             string textFile = args[0];
